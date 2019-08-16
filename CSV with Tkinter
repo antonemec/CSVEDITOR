@@ -48,7 +48,7 @@ def start_command():
 
 
 def files_directory():
-    return glob.glob("D:\\Users\\DN110493EAA\\Desktop\\*.csv")
+    return glob.glob("D:\\Users\\** USER_NAME **\\Desktop\\*.csv")
 
 
 def files_list():
