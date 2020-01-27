@@ -1,0 +1,279 @@
+from tkinter import *
+from tkinter import messagebox
+import glob
+import os
+import datetime
+
+HEADERS = [
+    'UserID',
+    'first_name',
+    'last_name',
+    'age',
+    'group_name',
+    'phone',
+    'email'
+]
+
+COMMANDS_IN_FILE = {1: 'Показать содержимое файла',
+                    2: 'Выполнить поиск по файлу',
+                    3: 'Закрыть файл'}
+
+
+def start_command():
+    print("МЕНЮ:\n____")
+    for i in COMMANDS_PAN:
+        print(i, COMMANDS_PAN[i])
+    try:
+        command = int(input('____\nВыберите необходимую операцию: '))
+    except ValueError:
+        print('Это не число. Повторите ввод!')
+    except Exception:
+        print('Это что ещё такое?')
+    else:
+        if command == 1:
+            create_file()
+        elif command == 2:
+            open_file()
+        elif command == 3:
+            update_file()
+        elif command == 4:
+            delete()
+        elif command <= 0:
+            print("МАЛО!")
+        elif command > 5:
+            print("МНОГО")
+        else:
+            print("EXIT!")
+            exit(0)
+
+
+def files_directory():
+    return glob.glob("D:\\Users\\** USER_NAME **\\Desktop\\*.csv")
+
+
+def files_list():
+    for i in range(len(files_directory())):
+        print(i, files_directory()[i])
+    return
+
+
+def open_file():
+    files_list()
+    while True:
+        try:
+            file_num = int(input('Введите номер файла для открытия: '))
+        except ValueError:
+            print('Это не число. Повторите ввод!')
+        except Exception:
+            print('Это что ещё такое?')
+        else:
+            try:
+                param(file_num)
+            except IndexError:
+                print("Число вне заданного диапозона!")
+
+
+def CorrectEmail(email):
+    if email.count('@') > 1 or email.count('@') == 0:
+        print('Неверное количество знаков @')
+        email_result = False
+        return email_result
+    [name, domain] = email.split('@')
+    if len(domain) < 3:
+        print('Доменное имя короче 3 символов')
+        email_result = False
+        return email_result
+    if len(domain) > 256:
+        print('Доменное имя длиннее 256 символов')
+        email_result = False
+        return email_result
+    if domain.count('.') == 0:
+        print('Доменное имя не содержит точки')
+        email_result = False
+        return email_result
+    includedomain = domain.split('.')
+    # список с кодами корректных сиволов a-z - и _
+    correctchrlist = list(range(ord('a'), ord('z') + 1))
+    correctchrlist.extend([ord('-'), ord('_')])
+    for k in includedomain:
+        # проверяем нет ли пустых подстрок в домене
+        if k == '':
+            print('Доменное имя содержит пустую строку между точками')
+            email_result = False
+            return email_result
+        # проверяем нет ли нелегальных символов в подстроках в домене
+        for n in k:
+            if ord(n) not in correctchrlist:
+                errormsg = "Недопустимый символ " + n
+                print(errormsg)
+                email_result = False
+                return email_result
+        if (k[0] == '-') or (k[len(k) - 1] == '-'):
+            print('Доменное имя не может начинаться/заканчиваться знаком "-"')
+            email_result = False
+            return email_result
+    if len(name) > 128:
+        print(False, 'Имя длиннее 128 символов')
+        email_result = False
+        return email_result
+    # Добавляем в список корректных символов . ; " ! : ,
+    correctchrlist.extend([ord('.'), ord(';'), ord('"')])
+    onlyinquoteschrlist = [ord('!'), ord(','), ord(':')]
+    correctchrlist.extend(onlyinquoteschrlist)
+    # Проверка на парные кавычки
+    if name.count('"') % 2 != 0:
+        print("Непарные кавычки")
+        email_result = False
+        return email_result
+    # Переменные для отслеживания точки и открывающихся кавычек
+    doubledot = False
+    inquotes = False
+    for k in name:
+        if (k == '"'):
+            inquotes = not inquotes
+        if (ord(k) in onlyinquoteschrlist) and (inquotes == False):
+            print("Недопустимый символ вне кавычек")
+            email_result = False
+            return email_result
+        if ord(k) not in correctchrlist:
+            errormsg = "Недопустимый символ " + k
+            print(errormsg)
+            email_result = False
+            return email_result
+        # проверка на две точки подряд
+        if (k == '.'):
+            if doubledot == True:
+                print("Две точки в имени")
+                email_result = False
+                return email_result
+            else:
+                doubledot = True
+    print("Email валиден")
+    email_result = True
+    return email_result
+
+
+def param(x):
+    while True:
+        file = open(files_directory()[x], 'r')
+        for i in COMMANDS_IN_FILE:
+            print(i, COMMANDS_IN_FILE[i])
+        while True:
+            try:
+                command_in_file = int(input('Выберите нужный пункт: '))
+            except ValueError:
+                print('Это не число. Повторите ввод!')
+            except Exception:
+                print('Это что ещё такое?')
+            else:
+                if command_in_file == 1:
+                    print(file.read())
+                    print(file.readlines()[1])
+                elif command_in_file == 2:
+                    print("Поиск по столбцам, либо UserID?\n0 Столбцы\n1 UserID\n_________")
+                    search_id = int(input())
+                    if search_id == 0:
+                        for i in range(len(HEADERS)):
+                            print(i, HEADERS[i])
+                        pNum = int(input('Введите параметр поиска: '))
+                        value = input('Введите значение для поиска: ')
+                        for line in file.readlines():
+                            if line.strip().split(',')[pNum] == value:
+                                print(line)
+
+                    elif search_id == 1:
+                        value = input('Введите UserID для поиска: ')
+                        for line in file.readlines():
+                            if line.strip().split(',')[6] == value:
+                                print(line)
+                elif command_in_file == 3:
+                    file.close()
+
+
+def create_file():
+    new_file_name = open((input('Введите имя нового файла: ') + '.csv'), 'x')
+    new_file_name.close()
+    return print("Новый файл создан и закрыт")
+
+
+def update_file():
+    files_list()
+    up_file = (int(input('Введите номер файла для обновления: ')))
+    file = open(files_directory()[up_file], 'a')
+    result = []
+    for i in range(1):
+        for header in HEADERS:
+            if header == 'UserID':
+                user_input = f"CSVH{datetime.datetime.today().strftime('%Y%m%d%H%M%S')}"
+                result.append(user_input)
+            elif header == 'email':
+                print(header)
+                user_input = input('Enter email: ')
+                a = CorrectEmail(user_input)
+                while not a:
+                    print(a)
+                    user_input = input('Enter email: ')
+                else:
+                    print(a + 13)
+                    result.append(user_input)
+
+            else:
+                print(header)
+                user_input = input(f'Enter {header}: ')
+                result.append(user_input)
+
+        file.write(','.join(result) + '\n')
+    file.close()
+
+
+"""
+                num_param = (int(input(f'Введите количество параметров для добавления в {files_directory()[up_file]}: ')))
+                for i in range(num_param):
+                new_table_strs = []
+                name_str = (input(f'Введите значение {i+1} для добавления в {files_directory()[up_file]}: '))
+                new_table_strs.append(name_str)
+                print(new_table_strs)   
+                num_str = (int(input(f'Введите количество строк для добавления в {files_directory()[up_file]}: ')))
+"""
+
+
+def delete():
+    files_list()
+    del_file = (int(input('Введите номер файла для удаления: ')))
+    os.unlink(files_directory()[del_file])
+    return print("ФАЙЛ УДАЛЕН!")
+
+
+def edit_click():
+    messagebox.showinfo("GUI Python", "Нажата опция Edit")
+
+
+COMMANDS_PAN = {1: ('Добавить новый файл', create_file()),
+                2: ('Открыть файл', open_file()),
+                3: ('Обновить файл', update_file()),
+                4: ('Удалить файл', delete()),
+                5: ('Выйти', exit(0))}
+
+root = Tk()
+root.title("GUI на Python")
+root.geometry("300x250")
+
+main_menu = Menu()
+
+file_menu = Menu(font=("Verdana", 10), tearoff=0)
+for i in COMMANDS_PAN:
+    file_menu.add_command(label=COMMANDS_PAN[i][0], command=COMMANDS_PAN[i][1])
+'''
+file_menu.add_command(label="New")
+file_menu.add_command(label="Save")
+file_menu.add_command(label="Open")
+file_menu.add_separator()
+file_menu.add_command(label="Exit")
+'''
+main_menu.add_cascade(label="File", menu=file_menu)
+main_menu.add_cascade(label="Edit", command=edit_click)
+main_menu.add_cascade(label="View")
+
+root.config(menu=main_menu)
+
+root.mainloop()
